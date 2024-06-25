@@ -21,7 +21,7 @@ highPathDbuff = 3
 waterToDeath = 5
 weakToDeath = 5
 
-desartLen = 70
+desartLen = 60
 
 currentwaterSup = 4
 currentweakLVL = 0
