@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import time
 
 # Initialize Pygame
 pygame.init()
@@ -17,6 +18,7 @@ BLUE = (0, 0, 255)
 GOAL_WIDTH = 100
 WINNING_SCORE = 5  # Set winning score threshold
 GAME_TIME = 60  # Game duration in seconds
+COOLDOWN_TIME = 0.02  # Cooldown time in seconds
 
 # Set up the display
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -37,6 +39,8 @@ score1 = 0
 score2 = 0
 start_time = pygame.time.get_ticks()  # Record the start time
 
+# Collision cooldown timers
+last_collision_time = 0
 
 def draw_objects():
     screen.fill(WHITE)
@@ -61,21 +65,35 @@ def draw_objects():
 
     pygame.display.flip()
 
-
 def handle_collision():
-    global puck_dx, puck_dy, score1, score2
+    global puck_dx, puck_dy, score1, score2, last_collision_time
+
+    current_time = time.time()
+    if (current_time - last_collision_time) < COOLDOWN_TIME:
+        return
 
     # Collide with paddles
-    if puck.colliderect(paddle1) or puck.colliderect(paddle2):
-        puck_dx = -puck_dx  # Reverse puck's direction on x-axis
+    if puck.colliderect(paddle1):
+        puck.right = paddle1.left
+        puck_dx = -puck_dx
+        puck_dy += (paddle1.dy if hasattr(paddle1, 'dy') else 0)
+        last_collision_time = time.time()
+
+    if puck.colliderect(paddle2):
+        puck.left = paddle2.right
+        puck_dx = -puck_dx
+        puck_dy += (paddle2.dy if hasattr(paddle2, 'dy') else 0)
+        last_collision_time = time.time()
 
     # Collide with goals
     if puck.colliderect(goal1):
         score2 += 1
         reset_puck()
+        reset_paddle()
     if puck.colliderect(goal2):
         score1 += 1
         reset_puck()
+        reset_paddle()
 
     # Collide with walls
     if puck.left <= 0 or puck.right >= WIDTH:
@@ -84,7 +102,6 @@ def handle_collision():
     if puck.top <= 0 or puck.bottom >= HEIGHT:
         puck_dy = -puck_dy  # Reverse puck's direction on y-axis
 
-
 def reset_puck():
     global puck_dx, puck_dy
     puck.x = WIDTH // 2 - PUCK_RADIUS
@@ -92,11 +109,11 @@ def reset_puck():
     puck_dx = random.choice([-PUCK_SPEED, PUCK_SPEED])
     puck_dy = random.choice([-PUCK_SPEED, PUCK_SPEED])
 
-
 def reset_paddle():
-    # Optionally reset paddle positions if needed
-    pass
-
+    paddle2.x = PADDLE_SPEED *3
+    paddle2.y = HEIGHT // 2 - PADDLE_RADIUS
+    paddle1.x = WIDTH - PADDLE_RADIUS * 3
+    paddle1.y = HEIGHT // 2 - PADDLE_RADIUS
 
 def display_winner(winner):
     screen.fill(WHITE)
@@ -106,12 +123,11 @@ def display_winner(winner):
     pygame.display.flip()
     pygame.time.wait(2000)  # Display the winner for 2 seconds
 
-
 def game_loop():
     global puck_dx, puck_dy
 
     clock = pygame.time.Clock()
-
+    reset_paddle()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -131,9 +147,9 @@ def game_loop():
             paddle1.y += PADDLE_SPEED
         if keys[pygame.K_a] and paddle1.left > 0:
             paddle1.x -= PADDLE_SPEED
-        if keys[pygame.K_d] and paddle1.right < WIDTH // 2:
+        if keys[pygame.K_d] and paddle1.right < WIDTH:
             paddle1.x += PADDLE_SPEED
-        if keys[pygame.K_LEFT] and paddle2.left > WIDTH // 2:
+        if keys[pygame.K_LEFT] and paddle2.left > WIDTH:
             paddle2.x -= PADDLE_SPEED
         if keys[pygame.K_RIGHT] and paddle2.right < WIDTH:
             paddle2.x += PADDLE_SPEED
@@ -149,10 +165,10 @@ def game_loop():
         elapsed_time = (pygame.time.get_ticks() - start_time) / 1000
         remaining_time = max(GAME_TIME - int(elapsed_time), 0)
 
-        if (score1 > score2 + 2):
+        if score1 > score2 + 2:
             display_winner("Player 1")
             break
-        if(score2 > score1 + 2):
+        if score2 > score1 + 2:
             display_winner("Player 2")
             break
         if remaining_time == 0:
@@ -166,7 +182,6 @@ def game_loop():
 
         # Cap the frame rate
         clock.tick(30)
-
 
 if __name__ == "__main__":
     game_loop()
