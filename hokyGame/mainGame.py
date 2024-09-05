@@ -149,7 +149,7 @@ def game_loop():
             paddle1.x -= PADDLE_SPEED
         if keys[pygame.K_d] and paddle1.right < WIDTH:
             paddle1.x += PADDLE_SPEED
-        if keys[pygame.K_LEFT] and paddle2.left > WIDTH:
+        if keys[pygame.K_LEFT] and paddle2.left < WIDTH:
             paddle2.x -= PADDLE_SPEED
         if keys[pygame.K_RIGHT] and paddle2.right < WIDTH:
             paddle2.x += PADDLE_SPEED
