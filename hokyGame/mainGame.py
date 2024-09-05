@@ -1,12 +1,10 @@
-import pygame
-import sys
 import random
+import sys
 import time
+import pygame
 
-# Initialize Pygame
 pygame.init()
 
-# Constants
 WIDTH, HEIGHT = 800, 400
 PADDLE_RADIUS = 20
 PUCK_RADIUS = 10
@@ -16,31 +14,27 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 GOAL_WIDTH = 100
-WINNING_SCORE = 5  # Set winning score threshold
-GAME_TIME = 60  # Game duration in seconds
-COOLDOWN_TIME = 0.02  # Cooldown time in seconds
+WINNING_SCORE = 5
+GAME_TIME = 60
+COOLDOWN_TIME = 0.02
 
-# Set up the display
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Air Hockey')
 
-# Define paddles and puck
 paddle1 = pygame.Rect(50, HEIGHT // 2 - PADDLE_RADIUS, PADDLE_RADIUS * 2, PADDLE_RADIUS * 2)
 paddle2 = pygame.Rect(WIDTH - 70, HEIGHT // 2 - PADDLE_RADIUS, PADDLE_RADIUS * 2, PADDLE_RADIUS * 2)
 puck = pygame.Rect(WIDTH // 2 - PUCK_RADIUS, HEIGHT // 2 - PUCK_RADIUS, PUCK_RADIUS * 2, PUCK_RADIUS * 2)
 puck_dx, puck_dy = PUCK_SPEED, PUCK_SPEED
 
-# Goals
 goal1 = pygame.Rect(0, HEIGHT // 2 - GOAL_WIDTH // 2, 10, GOAL_WIDTH)
 goal2 = pygame.Rect(WIDTH - 10, HEIGHT // 2 - GOAL_WIDTH // 2, 10, GOAL_WIDTH)
 
-# Scores and Timer
 score1 = 0
 score2 = 0
-start_time = pygame.time.get_ticks()  # Record the start time
+start_time = pygame.time.get_ticks()
 
-# Collision cooldown timers
 last_collision_time = 0
+
 
 def draw_objects():
     screen.fill(WHITE)
@@ -50,20 +44,19 @@ def draw_objects():
     pygame.draw.rect(screen, BLACK, goal1)
     pygame.draw.rect(screen, BLACK, goal2)
 
-    # Draw scores
     font = pygame.font.SysFont(None, 36)
     text1 = font.render(f'Player 1: {score1}', True, BLACK)
     text2 = font.render(f'Player 2: {score2}', True, BLACK)
     screen.blit(text1, (20, 20))
     screen.blit(text2, (WIDTH - 150, 20))
 
-    # Draw timer
-    elapsed_time = (pygame.time.get_ticks() - start_time) / 1000  # Convert milliseconds to seconds
-    remaining_time = max(GAME_TIME - int(elapsed_time), 0)  # Calculate remaining time
+    elapsed_time = (pygame.time.get_ticks() - start_time) / 1000
+    remaining_time = max(GAME_TIME - int(elapsed_time), 0)
     timer_text = font.render(f'Time: {remaining_time}', True, BLACK)
     screen.blit(timer_text, (WIDTH // 2 - 50, 20))
 
     pygame.display.flip()
+
 
 def handle_collision():
     global puck_dx, puck_dy, score1, score2, last_collision_time
@@ -72,7 +65,6 @@ def handle_collision():
     if (current_time - last_collision_time) < COOLDOWN_TIME:
         return
 
-    # Collide with paddles
     if puck.colliderect(paddle1):
         puck.right = paddle1.left
         puck_dx = -puck_dx
@@ -95,12 +87,12 @@ def handle_collision():
         reset_puck()
         reset_paddle()
 
-    # Collide with walls
     if puck.left <= 0 or puck.right >= WIDTH:
-        puck_dx = -puck_dx  # Reverse puck's direction on x-axis
+        puck_dx = -puck_dx
 
     if puck.top <= 0 or puck.bottom >= HEIGHT:
-        puck_dy = -puck_dy  # Reverse puck's direction on y-axis
+        puck_dy = -puck_dy
+
 
 def reset_puck():
     global puck_dx, puck_dy
@@ -109,11 +101,13 @@ def reset_puck():
     puck_dx = random.choice([-PUCK_SPEED, PUCK_SPEED])
     puck_dy = random.choice([-PUCK_SPEED, PUCK_SPEED])
 
+
 def reset_paddle():
-    paddle2.x = PADDLE_SPEED *3
+    paddle2.x = PADDLE_SPEED * 3
     paddle2.y = HEIGHT // 2 - PADDLE_RADIUS
     paddle1.x = WIDTH - PADDLE_RADIUS * 3
     paddle1.y = HEIGHT // 2 - PADDLE_RADIUS
+
 
 def display_winner(winner):
     screen.fill(WHITE)
@@ -121,7 +115,10 @@ def display_winner(winner):
     text = font.render(f'{winner} Wins!', True, BLACK)
     screen.blit(text, (WIDTH // 4, HEIGHT // 3))
     pygame.display.flip()
-    pygame.time.wait(2000)  # Display the winner for 2 seconds
+    with open("game_result.txt", "w") as file:
+        file.write(f'{winner} Wins!')
+    pygame.time.wait(2000)
+
 
 def game_loop():
     global puck_dx, puck_dy
@@ -154,14 +151,11 @@ def game_loop():
         if keys[pygame.K_RIGHT] and paddle2.right < WIDTH:
             paddle2.x += PADDLE_SPEED
 
-        # Move the puck
         puck.x += puck_dx
         puck.y += puck_dy
 
-        # Draw everything
         draw_objects()
 
-        # Check for winner
         elapsed_time = (pygame.time.get_ticks() - start_time) / 1000
         remaining_time = max(GAME_TIME - int(elapsed_time), 0)
 
@@ -180,8 +174,8 @@ def game_loop():
                 display_winner("Draw")
             break
 
-        # Cap the frame rate
         clock.tick(30)
+
 
 if __name__ == "__main__":
     game_loop()
